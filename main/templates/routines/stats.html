@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Stats · Routine</title>
+
+  <style>
+    :root {
+      --green:       #3d5a47;
+      --green-light: #eaf0eb;
+      --green-mid:   #c6d9ca;
+      --cream:       #f5f0e8;
+      --paper:       #fdfaf5;
+      --ink:         #2a2a2a;
+      --ink-muted:   #7a7a7a;
+      --ink-faint:   #c8c2b4;
+      --nav-h:       64px;
+      --safe-b:      env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100dvh;
+      padding-bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
+    }
+
+    .shell {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      padding: 24px 0 16px;
+      text-align: center;
+    }
+    .page-header h1 { font-size: 1.6rem; letter-spacing: -0.02em; }
+    .page-header .range {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Period toggle ── */
+    .period-toggle {
+      display: flex;
+      background: var(--paper);
+      border-radius: 99px;
+      padding: 4px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .period-toggle a {
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+      padding: 9px 0;
+      border-radius: 99px;
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+      transition: background 0.15s, color 0.15s;
+    }
+    .period-toggle a.active {
+      background: var(--green);
+      color: white;
+    }
+
+    /* ── Summary row ── */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .summary-tile {
+      background: var(--paper);
+      border-radius: 14px;
+      padding: 14px 8px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .summary-tile .num {
+      font-size: 1.8rem;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-tile .lbl {
+      font-size: 0.7rem;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Section heading ── */
+    .section-heading {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+      margin: 20px 0 10px 2px;
+    }
+
+    /* ── Per-habit card ── */
+    .habit-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .habit-card {
+      background: var(--paper);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .habit-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .habit-card-top .hname { font-size: 0.97rem; }
+    .habit-card-top .hmeta {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+    }
+    .hbar-track {
+      height: 6px;
+      background: var(--green-mid);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .hbar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 99px;
+    }
+
+    /* ── Daily grid (heatmap) ── */
+    .grid-wrap {
+      background: var(--paper);
+      border-radius: 14px;
+      padding: 14px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table.heatmap {
+      border-collapse: collapse;
+      min-width: 100%;
+      font-size: 0.75rem;
+    }
+    table.heatmap th, table.heatmap td {
+      text-align: center;
+      padding: 4px 3px;
+    }
+    table.heatmap th {
+      color: var(--ink-muted);
+      font-weight: normal;
+      white-space: nowrap;
+      padding-bottom: 8px;
+    }
+    td.date-cell {
+      text-align: left;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      padding-right: 10px;
+      font-size: 0.72rem;
+    }
+    tr.today-row td.date-cell {
+      font-weight: bold;
+      color: var(--green);
+    }
+    .dot {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border-radius: 4px;
+    }
+    .dot-off { background: var(--green-mid); }
+    .dot-on  { background: var(--green); }
+    .dot-na  { background: transparent; border: 1px dashed var(--ink-faint); }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: var(--paper);
+      border-top: 1px solid var(--ink-faint);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--ink-muted);
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex: 1;
+      padding: 10px 0;
+      transition: color 0.15s;
+    }
+    .nav-item .ni { font-size: 1.3rem; line-height: 1; }
+    .nav-item.active { color: var(--green); }
+    .nav-logout { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .nav-logout form { display: contents; }
+    .nav-logout button {
+      background: none; border: none; cursor: pointer;
+      font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      color: var(--ink-muted); font-size: 0.6rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 10px 0; width: 100%;
+    }
+    .nav-logout button .ni { font-size: 1.3rem; line-height: 1; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <div class="page-header">
+      <h1>Stats</h1>
+      <div class="range">{{ start_date|date:"M j" }} – {{ today|date:"M j, Y" }}</div>
+    </div>
+
+    <!-- Period toggle -->
+    <div class="period-toggle">
+      <a href="?period=week"  class="{% if period == 'week'  %}active{% endif %}">Last 7 Days</a>
+      <a href="?period=month" class="{% if period == 'month' %}active{% endif %}">Last 30 Days</a>
+    </div>
+
+    <!-- Summary tiles -->
+    <div class="summary-row">
+      <div class="summary-tile">
+        <div class="num">{{ overall_percent }}%</div>
+        <div class="lbl">Overall</div>
+      </div>
+      <div class="summary-tile">
+        <div class="num">{{ total_completed }}</div>
+        <div class="lbl">Done</div>
+      </div>
+      <div class="summary-tile">
+        <div class="num">{{ total_missed }}</div>
+        <div class="lbl">Missed</div>
+      </div>
+    </div>
+
+    {% if habit_stats %}
+      <!-- Per-habit -->
+      <div class="section-heading">Per Habit</div>
+      <div class="habit-cards">
+        {% for stat in habit_stats %}
+        <div class="habit-card">
+          <div class="habit-card-top">
+            <span class="hname">{% if stat.habit.icon %}{{ stat.habit.icon }} {% endif %}{{ stat.habit.name }}</span>
+            <span class="hmeta">
+              {% if stat.percent is not None %}{{ stat.percent }}%{% else %}no data{% endif %}
+            </span>
+          </div>
+          <div class="hbar-track">
+            <div class="hbar-fill" style="width: {{ stat.percent|default:0 }}%;"></div>
+          </div>
+          {% if stat.percent is not None %}
+          <div style="font-size:0.72rem; color: var(--ink-muted); margin-top: 6px;">
+            {{ stat.completed }} done &middot; {{ stat.missed }} missed
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Daily grid -->
+      <div class="section-heading">Daily Grid</div>
+      <div class="grid-wrap">
+        <table class="heatmap">
+          <thead>
+            <tr>
+              <th></th>
+              {% for h in habits %}
+                <th title="{{ h.name }}">{{ h.icon|default:h.name|slice:":3" }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in grid %}
+            <tr class="{% if row.is_today %}today-row{% endif %}">
+              <td class="date-cell">{{ row.date|date:"M j" }}</td>
+              {% for cell in row.cells %}
+                <td><span class="dot dot-{{ cell }}"></span></td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% else %}
+      <div style="text-align:center; color: var(--ink-muted); padding: 40px 0; font-style: italic;">
+        No habits to show yet.
+      </div>
+    {% endif %}
+
+  </div><!-- /shell -->
+
+  <nav class="bottom-nav">
+    <a href="{% url 'routines:today' %}" class="nav-item">
+      <span class="ni">☀️</span>Today
+    </a>
+    <a href="{% url 'routines:stats' %}" class="nav-item active">
+      <span class="ni">📊</span>Stats
+    </a>
+    <a href="{% url 'routines:manage' %}" class="nav-item">
+      <span class="ni">⚙️</span>Manage
+    </a>
+    <div class="nav-logout">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit"><span class="ni">🚪</span>Logout</button>
+      </form>
+    </div>
+  </nav>
+</body>
+</html>

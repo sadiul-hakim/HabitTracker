@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Routine</title>
+    <style>
+      :root {
+        --green: #3d5a47;
+        --green-light: #eaf0eb;
+        --cream: #f5f0e8;
+        --paper: #fdfaf5;
+        --ink: #2a2a2a;
+        --ink-muted: #7a7a7a;
+        --ink-faint: #c8c2b4;
+      }
+      
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      body {
+        font-family: Georgia, serif;
+        background: var(--cream);
+        color: var(--ink);
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 20px;
+      }
+      
+      .home-wrap {
+        width: 100%;
+        max-width: 440px;
+        text-align: center;
+      }
+      
+      .app-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        display: block;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        margin-bottom: 6px;
+        line-height: 1.2;
+      }
+      
+      .subtitle {
+        font-size: 0.9rem;
+        color: var(--ink-muted);
+        margin-bottom: 32px;
+        font-style: italic;
+      }
+      
+      .quote-card {
+        background: var(--paper);
+        border-radius: 16px;
+        padding: 22px 20px;
+        margin-bottom: 36px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+      }
+      
+      .quote-card p {
+        font-style: italic;
+        color: var(--ink-muted);
+        font-size: 0.92rem;
+        line-height: 1.7;
+      }
+      
+      .quote-card cite {
+        display: block;
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: var(--green);
+        font-style: normal;
+        font-weight: bold;
+      }
+      
+      .cta-btn {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background: var(--green);
+        color: white;
+        text-decoration: none;
+        border-radius: 50px;
+        font-family: Georgia, serif;
+        font-size: 1.05rem;
+        letter-spacing: 0.01em;
+        transition: background 0.15s, transform 0.1s;
+      }
+      .cta-btn:active {
+        transform: scale(0.97);
+        background: #2e4436;
+      }
+      
+      .login-note {
+        margin-top: 18px;
+        font-size: 0.8rem;
+        color: var(--ink-faint);
+      }
+      .login-note a {
+        color: var(--ink-muted);
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="home-wrap">
+      <span class="app-icon">🌿</span>
+      <h1>Daily Routine</h1>
+      <p class="subtitle">Track habits. Build consistency.</p>
+
+      <div class="quote-card">
+        <p>"Reading maketh a full man; conference a ready man; and writing an exact man."</p>
+        <cite>— Francis Bacon</cite>
+      </div>
+
+      <a href="/main/" class="cta-btn">Open Today's Routine →</a>
+
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <p class="login-note">
+          Signed in &middot; <button type="submit" style="background:none; border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; color:var(--ink-muted); text-decoration:underline; padding:0;">Log out</button>
+        </p>
+      </form>
+    </div>
+  </body>
+</html>

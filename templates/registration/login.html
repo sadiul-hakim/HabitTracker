@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Sign In · Routine</title>
+
+  <style>
+    :root {
+      --green:     #3d5a47;
+      --green-light: #eaf0eb;
+      --cream:     #f5f0e8;
+      --paper:     #fdfaf5;
+      --ink:       #2a2a2a;
+      --ink-muted: #7a7a7a;
+      --ink-faint: #c8c2b4;
+      --red:       #b83232;
+      --red-light: #fbeaea;
+      --safe-b:    env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px calc(24px + var(--safe-b));
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--paper);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+    .brand h1 { font-size: 1.5rem; letter-spacing: -0.02em; }
+    .brand .tagline { font-size: 0.82rem; color: var(--ink-muted); font-style: italic; margin-top: 4px; }
+
+    .error-msg {
+      background: var(--red-light);
+      color: var(--red);
+      font-size: 0.82rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 14px;
+      border: 1.5px solid var(--ink-faint);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      background: white;
+      color: var(--ink);
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 8px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 99px;
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .submit-btn:active { transform: scale(0.97); background: #2e4436; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <span class="icon">🌿</span>
+      <h1>Daily Routine</h1>
+      <p class="tagline">Sign in to continue</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="error-msg">Incorrect username or password. Try again.</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="id_username">Username</label>
+        <input
+          type="text"
+          id="id_username"
+          name="username"
+          class="form-input"
+          autocomplete="username"
+          autocapitalize="off"
+          autocorrect="off"
+          required
+        >
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_password">Password</label>
+        <input
+          type="password"
+          id="id_password"
+          name="password"
+          class="form-input"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="submit-btn">Sign In</button>
+    </form>
+  </div>
+</body>
+</html>
