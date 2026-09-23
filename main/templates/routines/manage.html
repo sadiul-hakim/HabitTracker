@@ -1,187 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Manage · Routine</title>
+{% extends "base.html" %}
 
-  <style>
-    :root {
-      --green:       #3d5a47;
-      --green-light: #eaf0eb;
-      --green-mid:   #c6d9ca;
-      --cream:       #f5f0e8;
-      --paper:       #fdfaf5;
-      --ink:         #2a2a2a;
-      --ink-muted:   #7a7a7a;
-      --ink-faint:   #c8c2b4;
-      --red:         #b83232;
-      --red-light:   #fbeaea;
-      --amber:       #a06000;
-      --amber-light: #fdf3e0;
-      --nav-h:       64px;
-      --safe-b:      env(safe-area-inset-bottom, 0px);
-    }
+{% block title %}Manage · Routine{% endblock %}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { -webkit-tap-highlight-color: transparent; }
+{% block nav_manage %}active{% endblock %}
 
-    body {
-      font-family: Georgia, serif;
-      background: var(--cream);
-      color: var(--ink);
-      min-height: 100dvh;
-      padding-bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
-    }
+{% block extra_css %}
+<style>
+  .page-header {
+    padding: 24px 0 8px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+  .page-header .sub {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
 
-    .shell {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
+  .section-heading {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin: 20px 0 10px 2px;
+  }
 
-    .page-header {
-      padding: 24px 0 8px;
-      text-align: center;
-    }
-    .page-header h1 { font-size: 1.6rem; letter-spacing: -0.02em; }
-    .page-header .sub {
-      font-size: 0.82rem;
-      color: var(--ink-muted);
-      margin-top: 4px;
-      line-height: 1.5;
-    }
+  /* ── Habit row list ── */
+  .habit-list {
+    background: var(--paper);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
 
-    .section-heading {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--ink-muted);
-      margin: 20px 0 10px 2px;
-    }
+  .habit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    gap: 12px;
+    border-bottom: 1px solid var(--cream);
+    min-height: 60px;
+  }
+  .habit-row:last-child {
+    border-bottom: none;
+  }
 
-    /* ── Habit row list ── */
-    .habit-list {
-      background: var(--paper);
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
+  .habit-info {
+    flex: 1;
+  }
+  .habit-info .hname {
+    font-size: 0.97rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .habit-info .hmeta {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    margin-top: 3px;
+  }
 
-    .habit-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      gap: 12px;
-      border-bottom: 1px solid var(--cream);
-      min-height: 60px;
-    }
-    .habit-row:last-child { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 2px 9px;
+    border-radius: 99px;
+    letter-spacing: 0.03em;
+  }
+  .badge-active {
+    background: var(--green-light);
+    color: var(--green);
+  }
+  .badge-archived {
+    background: var(--amber-light);
+    color: var(--amber);
+  }
 
-    .habit-info { flex: 1; }
-    .habit-info .hname {
-      font-size: 0.97rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .habit-info .hmeta {
-      font-size: 0.75rem;
-      color: var(--ink-muted);
-      margin-top: 3px;
-    }
+  .delete-btn {
+    flex-shrink: 0;
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 8px 14px;
+    border-radius: 99px;
+    border: 1.5px solid var(--red);
+    color: var(--red);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+  .delete-btn:active {
+    background: var(--red);
+    color: white;
+  }
 
-    .badge {
-      display: inline-block;
-      font-size: 0.65rem;
-      padding: 2px 9px;
-      border-radius: 99px;
-      letter-spacing: 0.03em;
-    }
-    .badge-active   { background: var(--green-light); color: var(--green); }
-    .badge-archived { background: var(--amber-light); color: var(--amber); }
+  .empty-row {
+    padding: 20px 16px;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+  }
 
-    .delete-btn {
-      flex-shrink: 0;
-      text-decoration: none;
-      font-size: 0.8rem;
-      padding: 8px 14px;
-      border-radius: 99px;
-      border: 1.5px solid var(--red);
-      color: var(--red);
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-      min-height: 36px;
-      display: flex;
-      align-items: center;
-    }
-    .delete-btn:active { background: var(--red); color: white; }
+  /* ── Info box ── */
+  .info-box {
+    background: var(--green-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    color: var(--green);
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+</style>
+{% endblock %}
 
-    .empty-row {
-      padding: 20px 16px;
-      font-style: italic;
-      font-size: 0.88rem;
-      color: var(--ink-muted);
-    }
+{% block content %}
+  <div class="page-header">
+    <h1>Manage Habits</h1>
+    <p class="sub">Add or edit habits via the admin panel. Delete archived habits permanently here.</p>
+  </div>
 
-    /* ── Info box ── */
-    .info-box {
-      background: var(--green-light);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 0.82rem;
-      color: var(--green);
-      line-height: 1.6;
-      margin-top: 12px;
-    }
-
-    /* ── Bottom nav ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + var(--safe-b));
-      padding-bottom: var(--safe-b);
-      background: var(--paper);
-      border-top: 1px solid var(--ink-faint);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 100;
-    }
-    .nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      text-decoration: none; color: var(--ink-muted);
-      font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase;
-      flex: 1; padding: 10px 0; transition: color 0.15s;
-    }
-    .nav-item .ni { font-size: 1.3rem; line-height: 1; }
-    .nav-item.active { color: var(--green); }
-    .nav-logout { flex: 1; display: flex; flex-direction: column; align-items: center; }
-    .nav-logout form { display: contents; }
-    .nav-logout button {
-      background: none; border: none; cursor: pointer; font-family: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      color: var(--ink-muted); font-size: 0.6rem;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 10px 0; width: 100%;
-    }
-    .nav-logout button .ni { font-size: 1.3rem; line-height: 1; }
-  </style>
-</head>
-<body>
-  <div class="shell">
-
-    <div class="page-header">
-      <h1>Manage Habits</h1>
-      <p class="sub">Add or edit habits via the admin panel. Delete archived habits permanently here.</p>
-    </div>
-
-    <!-- Active habits -->
-    <div class="section-heading">Active</div>
-    <div class="habit-list">
-      {% for habit in active_habits %}
+  <!-- Active habits -->
+  <div class="section-heading">Active</div>
+  <div class="habit-list">
+    {% for habit in active_habits %}
       <div class="habit-row">
         <div class="habit-info">
           <div class="hname">
@@ -189,18 +138,18 @@
             {{ habit.name }}
             <span class="badge badge-active">active</span>
           </div>
-          <div class="hmeta">Since {{ habit.created_at|date:"M j, Y" }}</div>
+          <div class="hmeta">Since {{ habit.created_at|date:'M j, Y' }}</div>
         </div>
       </div>
-      {% empty %}
+    {% empty %}
       <div class="empty-row">No active habits yet.</div>
-      {% endfor %}
-    </div>
+    {% endfor %}
+  </div>
 
-    <!-- Archived habits -->
-    <div class="section-heading">Archived</div>
-    <div class="habit-list">
-      {% for habit in archived_habits %}
+  <!-- Archived habits -->
+  <div class="section-heading">Archived</div>
+  <div class="habit-list">
+    {% for habit in archived_habits %}
       <div class="habit-row">
         <div class="habit-info">
           <div class="hname">
@@ -208,40 +157,15 @@
             {{ habit.name }}
             <span class="badge badge-archived">archived</span>
           </div>
-          <div class="hmeta">
-            {{ habit.created_at|date:"M j, Y" }} → {{ habit.archived_at|date:"M j, Y" }}
-            &middot; {{ habit.logs.count }} log{{ habit.logs.count|pluralize }}
-          </div>
+          <div class="hmeta">{{ habit.created_at|date:'M j, Y' }} → {{ habit.archived_at|date:'M j, Y' }}
+            &middot; {{ habit.logs.count }} log{{ habit.logs.count|pluralize }}</div>
         </div>
         <a href="{% url 'routines:delete' habit.id %}" class="delete-btn">Delete</a>
       </div>
-      {% empty %}
+    {% empty %}
       <div class="empty-row">Nothing archived.</div>
-      {% endfor %}
-    </div>
+    {% endfor %}
+  </div>
 
-    <div class="info-box">
-      💡 To archive a habit, uncheck "is active" in the admin panel. Its history is preserved and it appears here.
-    </div>
-
-  </div><!-- /shell -->
-
-  <nav class="bottom-nav">
-    <a href="{% url 'routines:today' %}" class="nav-item">
-      <span class="ni">☀️</span>Today
-    </a>
-    <a href="{% url 'routines:stats' %}" class="nav-item">
-      <span class="ni">📊</span>Stats
-    </a>
-    <a href="{% url 'routines:manage' %}" class="nav-item active">
-      <span class="ni">⚙️</span>Manage
-    </a>
-    <div class="nav-logout">
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit"><span class="ni">🚪</span>Logout</button>
-      </form>
-    </div>
-  </nav>
-</body>
-</html>
+  <div class="info-box">💡 To archive a habit, uncheck "is active" in the admin panel. Its history is preserved and it appears here.</div>
+{% endblock %}

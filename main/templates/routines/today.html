@@ -1,411 +1,349 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>{% if is_today %}Today{% else %}{{ target_date|date:"M j" }}{% endif %} · Routine</title>
+{% extends "base.html" %}
 
-  <style>
-    :root {
-      --green:       #3d5a47;
-      --green-light: #eaf0eb;
-      --green-mid:   #c6d9ca;
-      --cream:       #f5f0e8;
-      --paper:       #fdfaf5;
-      --ink:         #2a2a2a;
-      --ink-muted:   #7a7a7a;
-      --ink-faint:   #c8c2b4;
-      --amber:       #a06000;
-      --amber-light: #fdf3e0;
-      --nav-h:       64px;
-      --safe-b:      env(safe-area-inset-bottom, 0px);
-    }
+{% block title %}
+  {% if is_today %}Today{% else %}{{ target_date|date:'M j' }}{% endif %} · Routine
+{% endblock %}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { -webkit-tap-highlight-color: transparent; }
+{% block nav_today %}active{% endblock %}
 
-    body {
-      font-family: Georgia, serif;
-      background: var(--cream);
-      color: var(--ink);
-      min-height: 100dvh;
-      padding-bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
-    }
+{% block extra_css %}
+<style>
+  /* ── Top bar ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0 12px;
+  }
 
-    /* ── App shell ── */
-    .shell {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
+  .top-bar .app-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+  }
 
-    /* ── Top bar ── */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 0 12px;
-    }
+  /* ── Day navigator ── */
+  .day-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 6px;
+  }
 
-    .top-bar .app-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--ink-muted);
-    }
+  .day-nav .page-title {
+    flex: 1;
+    text-align: center;
+  }
 
-    /* ── Day navigator ── */
-    .day-nav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      margin-bottom: 6px;
-    }
+  .day-nav .page-title h1 {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
 
-    .day-nav .page-title {
-      flex: 1;
-      text-align: center;
-    }
+  .day-nav .page-title .date-sub {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
 
-    .day-nav .page-title h1 {
-      font-size: 1.5rem;
-      letter-spacing: -0.02em;
-    }
+  .arrow-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-decoration: none;
+    color: var(--green);
+    font-size: 1.1rem;
+    border: 1.5px solid var(--green-mid);
+    background: var(--paper);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .arrow-btn:active {
+    background: var(--green-light);
+  }
+  .arrow-btn.disabled {
+    color: var(--ink-faint);
+    border-color: var(--ink-faint);
+    pointer-events: none;
+  }
 
-    .day-nav .page-title .date-sub {
-      font-size: 0.8rem;
-      color: var(--ink-muted);
-      font-style: italic;
-    }
+  /* ── Back-to-today pill ── */
+  .today-pill {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .today-pill a {
+    text-decoration: none;
+    font-size: 0.78rem;
+    color: var(--green);
+    background: var(--green-light);
+    padding: 5px 16px;
+    border-radius: 99px;
+  }
 
-    .arrow-btn {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      text-decoration: none;
-      color: var(--green);
-      font-size: 1.1rem;
-      border: 1.5px solid var(--green-mid);
-      background: var(--paper);
-      flex-shrink: 0;
-      transition: background 0.15s;
-    }
-    .arrow-btn:active { background: var(--green-light); }
-    .arrow-btn.disabled {
-      color: var(--ink-faint);
-      border-color: var(--ink-faint);
-      pointer-events: none;
-    }
+  /* ── Past-day banner ── */
+  .past-banner {
+    background: var(--amber-light);
+    color: var(--amber);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 8px 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
 
-    /* ── Back-to-today pill ── */
-    .today-pill {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-    .today-pill a {
-      text-decoration: none;
-      font-size: 0.78rem;
-      color: var(--green);
-      background: var(--green-light);
-      padding: 5px 16px;
-      border-radius: 99px;
-    }
+  /* ── Progress card ── */
+  .prog-card {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+  }
 
-    /* ── Past-day banner ── */
-    .past-banner {
-      background: var(--amber-light);
-      color: var(--amber);
-      font-size: 0.8rem;
-      text-align: center;
-      padding: 8px 14px;
-      border-radius: 10px;
-      margin-bottom: 14px;
-    }
+  .prog-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
 
-    /* ── Progress card ── */
-    .prog-card {
-      background: var(--paper);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-    }
+  .prog-labels .pct {
+    font-weight: bold;
+    color: var(--green);
+    font-size: 1rem;
+  }
 
-    .prog-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.82rem;
-      color: var(--ink-muted);
-      margin-bottom: 8px;
-    }
+  .prog-track {
+    height: 8px;
+    background: var(--green-mid);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
 
-    .prog-labels .pct {
-      font-weight: bold;
-      color: var(--green);
-      font-size: 1rem;
-    }
+  /* ── Habit list ── */
+  .habit-list {
+    list-style: none;
+    background: var(--paper);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+  }
 
-    .prog-track {
-      height: 8px;
-      background: var(--green-mid);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .prog-fill {
-      height: 100%;
-      background: var(--green);
-      border-radius: 99px;
-      transition: width 0.4s cubic-bezier(.25,.8,.25,1);
-    }
+  .habit-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--cream);
+    transition: background 0.1s;
+  }
+  .habit-item:last-child {
+    border-bottom: none;
+  }
+  .habit-item:active {
+    background: var(--cream);
+  }
 
-    /* ── Habit list ── */
-    .habit-list {
-      list-style: none;
-      background: var(--paper);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-    }
+  /* The whole row is the tap target */
+  .habit-item .check-form {
+    display: contents;
+  }
 
-    .habit-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 15px 16px;
-      border-bottom: 1px solid var(--cream);
-      transition: background 0.1s;
-    }
-    .habit-item:last-child { border-bottom: none; }
-    .habit-item:active { background: var(--cream); }
+  /* Invisible full-row submit via label trick */
+  .habit-item label.row-tap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    cursor: pointer;
+    min-height: 44px;
+  }
 
-    /* The whole row is the tap target */
-    .habit-item .check-form {
-      /* keep form inline */
-      display: contents;
-    }
+  .check-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--green);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+    font-size: 0.9rem;
+    color: white;
+  }
 
-    /* Invisible full-row submit via label trick */
-    .habit-item label.row-tap {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex: 1;
-      cursor: pointer;
-      min-height: 44px; /* iOS tap target */
-    }
+  .habit-item.done .check-circle {
+    background: var(--green);
+    border-color: var(--green);
+  }
 
-    .check-circle {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid var(--green);
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.15s, border-color 0.15s;
-      font-size: 0.9rem;
-      color: white;
-    }
+  .habit-icon-txt {
+    font-size: 1.2rem;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
 
-    .habit-item.done .check-circle {
-      background: var(--green);
-      border-color: var(--green);
-    }
+  .habit-info-col {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 8px;
+  }
 
-    .habit-icon-txt {
-      font-size: 1.2rem;
-      width: 22px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+  .habit-name {
+    font-size: 1rem;
+    transition: color 0.15s;
+  }
+  .habit-item.done .habit-name {
+    color: var(--ink-faint);
+    text-decoration: line-through;
+  }
 
-    .habit-name {
-      font-size: 1rem;
-      flex: 1;
-      transition: color 0.15s;
-    }
-    .habit-item.done .habit-name {
-      color: var(--ink-faint);
-      text-decoration: line-through;
-    }
+  /* ── Streak badge ── */
+  .streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #b75900;
+    background: #fdf2e2;
+    border: 1px solid #f9d8a6;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
 
-    /* Hidden submit button — the label triggers it */
-    .check-btn-hidden {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-      width: 0; height: 0;
-    }
+  .streak-badge.zero-streak {
+    color: var(--ink-faint);
+    background: transparent;
+    border-color: transparent;
+  }
 
-    /* ── Empty state ── */
-    .empty-state {
-      background: var(--paper);
-      border-radius: 16px;
-      padding: 40px 20px;
-      text-align: center;
-      color: var(--ink-muted);
-      font-size: 0.95rem;
-      line-height: 1.7;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-    }
-    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .empty-state a { color: var(--green); }
+  /* Hidden submit button — the label triggers it */
+  .check-btn-hidden {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
 
-    /* ── Bottom nav ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + var(--safe-b));
-      padding-bottom: var(--safe-b);
-      background: var(--paper);
-      border-top: 1px solid var(--ink-faint);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 100;
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      text-decoration: none;
-      color: var(--ink-muted);
-      font-size: 0.6rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      flex: 1;
-      padding: 10px 0;
-      transition: color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .nav-item .ni { font-size: 1.3rem; line-height: 1; }
-    .nav-item.active { color: var(--green); }
+  /* ── Empty state ── */
+  .empty-state {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+  }
+  .empty-state .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+  .empty-state a {
+    color: var(--green);
+  }
+</style>
+{% endblock %}
 
-    .nav-logout {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-    }
-    .nav-logout form { display: contents; }
-    .nav-logout button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      color: var(--ink-muted);
-      font-size: 0.6rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 10px 0;
-      width: 100%;
-      transition: color 0.15s;
-    }
-    .nav-logout button .ni { font-size: 1.3rem; line-height: 1; }
-  </style>
-</head>
-<body>
-  <div class="shell">
+{% block content %}
+  <!-- Top bar -->
+  <div class="top-bar">
+    <span class="app-label">🌿 Routine</span>
+  </div>
 
-    <!-- Top bar -->
-    <div class="top-bar">
-      <span class="app-label">🌿 Routine</span>
+  <!-- Day navigator -->
+  <div class="day-nav">
+    <a href="{% url 'routines:day' prev_date|date:'Y-m-d' %}" class="arrow-btn" aria-label="Previous day">&#8592;</a>
+    <div class="page-title">
+      <h1>
+        {% if is_today %}
+          Today
+        {% else %}
+          {{ target_date|date:'M j' }}
+        {% endif %}
+      </h1>
+      <div class="date-sub">{{ target_date|date:'l, F j, Y' }}</div>
     </div>
+    <a href="{% if next_date %}{% url 'routines:day' next_date|date:'Y-m-d' %}{% endif %}" class="arrow-btn {% if not next_date %}disabled{% endif %}" aria-label="Next day">&#8594;</a>
+  </div>
 
-    <!-- Day navigator -->
-    <div class="day-nav">
-      <a href="{% url 'routines:day' prev_date|date:'Y-m-d' %}" class="arrow-btn" aria-label="Previous day">&#8592;</a>
-      <div class="page-title">
-        <h1>{% if is_today %}Today{% else %}{{ target_date|date:"M j" }}{% endif %}</h1>
-        <div class="date-sub">{{ target_date|date:"l, F j, Y" }}</div>
-      </div>
-      <a href="{% if next_date %}{% url 'routines:day' next_date|date:'Y-m-d' %}{% endif %}"
-         class="arrow-btn {% if not next_date %}disabled{% endif %}" aria-label="Next day">&#8594;</a>
-    </div>
-
-    <!-- Back to today -->
-    {% if not is_today %}
+  <!-- Back to today -->
+  {% if not is_today %}
     <div class="today-pill">
       <a href="{% url 'routines:today' %}">↑ Back to Today</a>
     </div>
-    {% endif %}
+  {% endif %}
 
-    <!-- Past-day notice -->
-    {% if not is_today %}
+  <!-- Past-day notice -->
+  {% if not is_today %}
     <div class="past-banner">Editing past day — changes update your history.</div>
-    {% endif %}
+  {% endif %}
 
-    {% if total %}
-      <!-- Progress -->
-      <div class="prog-card">
-        <div class="prog-labels">
-          <span>{{ completed_count }} of {{ total }} done</span>
-          <span class="pct">{{ percent }}%</span>
-        </div>
-        <div class="prog-track">
-          <div class="prog-fill" style="width: {{ percent }}%;"></div>
-        </div>
+  {% if total %}
+    <!-- Progress -->
+    <div class="prog-card">
+      <div class="prog-labels">
+        <span>{{ completed_count }} of {{ total }} done</span>
+        <span class="pct">{{ percent }}%</span>
       </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width: {{ percent }}%;"></div>
+      </div>
+    </div>
 
-      <!-- Habit list -->
-      <ul class="habit-list">
-        {% for item in habit_data %}
+    <!-- Habit list -->
+    <ul class="habit-list">
+      {% for item in habit_data %}
         <li class="habit-item {% if item.done %}done{% endif %}">
           <form class="check-form" method="post" action="{% url 'routines:toggle' item.habit.id target_date|date:'Y-m-d' %}">
             {% csrf_token %}
             <label class="row-tap" for="btn-{{ item.habit.id }}">
               <span class="check-circle">{% if item.done %}✓{% endif %}</span>
-              {% if item.habit.icon %}<span class="habit-icon-txt">{{ item.habit.icon }}</span>{% endif %}
-              <span class="habit-name">{{ item.habit.name }}</span>
+              {% if item.habit.icon %}
+                <span class="habit-icon-txt">{{ item.habit.icon }}</span>
+              {% endif %}
+              <div class="habit-info-col">
+                <span class="habit-name">{{ item.habit.name }}</span>
+                {% if item.current_streak > 0 %}
+                  <span class="streak-badge" title="{{ item.current_streak }} consecutive day{{ item.current_streak|pluralize }}">🔥 {{ item.current_streak }}d</span>
+                {% endif %}
+              </div>
             </label>
             <button type="submit" id="btn-{{ item.habit.id }}" class="check-btn-hidden" tabindex="-1" aria-hidden="true"></button>
           </form>
         </li>
-        {% endfor %}
-      </ul>
-
-    {% else %}
-      <div class="empty-state">
-        <div class="empty-icon">📋</div>
-        <p>No habits yet.<br>Add some from the <a href="/admin/routines/habit/add/">admin panel</a>.</p>
-      </div>
-    {% endif %}
-
-  </div><!-- /shell -->
-
-  <!-- Bottom navigation -->
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <a href="{% url 'routines:today' %}" class="nav-item active">
-      <span class="ni">☀️</span>Today
-    </a>
-    <a href="{% url 'routines:stats' %}" class="nav-item">
-      <span class="ni">📊</span>Stats
-    </a>
-    <a href="{% url 'routines:manage' %}" class="nav-item">
-      <span class="ni">⚙️</span>Manage
-    </a>
-    <div class="nav-logout">
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">
-          <span class="ni">🚪</span>Logout
-        </button>
-      </form>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>
+        No habits yet.<br />Add some from the <a href="{% url 'admin:main_habit_add' %}">admin panel</a>.
+      </p>
     </div>
-  </nav>
-
-</body>
-</html>
+  {% endif %}
+{% endblock %}

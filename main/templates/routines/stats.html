@@ -1,339 +1,532 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Stats · Routine</title>
+{% extends "base.html" %}
 
-  <style>
-    :root {
-      --green:       #3d5a47;
-      --green-light: #eaf0eb;
-      --green-mid:   #c6d9ca;
-      --cream:       #f5f0e8;
-      --paper:       #fdfaf5;
-      --ink:         #2a2a2a;
-      --ink-muted:   #7a7a7a;
-      --ink-faint:   #c8c2b4;
-      --nav-h:       64px;
-      --safe-b:      env(safe-area-inset-bottom, 0px);
-    }
+{% block title %}Stats · Routine{% endblock %}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { -webkit-tap-highlight-color: transparent; }
+{% block nav_stats %}active{% endblock %}
 
-    body {
-      font-family: Georgia, serif;
-      background: var(--cream);
-      color: var(--ink);
-      min-height: 100dvh;
-      padding-bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
-    }
+{% block extra_css %}
+<style>
+  /* ── Header ── */
+  .page-header {
+    padding: 24px 0 16px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+  .page-header .range {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin-top: 4px;
+  }
 
-    .shell {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
+  /* ── Period toggle ── */
+  .period-toggle {
+    display: flex;
+    background: var(--paper);
+    border-radius: 99px;
+    padding: 4px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  }
+  .period-toggle a {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    padding: 9px 0;
+    border-radius: 99px;
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+    transition: background 0.15s, color 0.15s;
+  }
+  .period-toggle a.active {
+    background: var(--green);
+    color: white;
+  }
 
-    /* ── Header ── */
-    .page-header {
-      padding: 24px 0 16px;
-      text-align: center;
-    }
-    .page-header h1 { font-size: 1.6rem; letter-spacing: -0.02em; }
-    .page-header .range {
-      font-size: 0.82rem;
-      color: var(--ink-muted);
-      font-style: italic;
-      margin-top: 4px;
-    }
+  /* ── Summary tiles ── */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .summary-tile {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+  .summary-tile .num {
+    font-size: 1.8rem;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .summary-tile .lbl {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-    /* ── Period toggle ── */
-    .period-toggle {
-      display: flex;
-      background: var(--paper);
-      border-radius: 99px;
-      padding: 4px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-    }
-    .period-toggle a {
-      flex: 1;
-      text-align: center;
-      text-decoration: none;
-      padding: 9px 0;
-      border-radius: 99px;
-      font-size: 0.88rem;
-      color: var(--ink-muted);
-      transition: background 0.15s, color 0.15s;
-    }
-    .period-toggle a.active {
-      background: var(--green);
-      color: white;
-    }
+  /* ── Section heading ── */
+  .section-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin: 22px 0 10px 2px;
+  }
 
-    /* ── Summary row ── */
-    .summary-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .summary-tile {
-      background: var(--paper);
-      border-radius: 14px;
-      padding: 14px 8px;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
-    .summary-tile .num {
-      font-size: 1.8rem;
-      color: var(--green);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .summary-tile .lbl {
-      font-size: 0.7rem;
-      color: var(--ink-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
+  /* ══════════════════════════════════════
+     CALENDAR HEATMAP (30-DAY VIEW)
+  ══════════════════════════════════════ */
+  .calendar-card {
+    background: var(--paper);
+    border-radius: 18px;
+    padding: 18px 14px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+    margin-bottom: 16px;
+  }
 
-    /* ── Section heading ── */
-    .section-heading {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--ink-muted);
-      margin: 20px 0 10px 2px;
-    }
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .cal-weekdays span {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
 
-    /* ── Per-habit card ── */
-    .habit-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .habit-card {
-      background: var(--paper);
-      border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
-    .habit-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    .habit-card-top .hname { font-size: 0.97rem; }
-    .habit-card-top .hmeta {
-      font-size: 0.75rem;
-      color: var(--ink-muted);
-    }
-    .hbar-track {
-      height: 6px;
-      background: var(--green-mid);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .hbar-fill {
-      height: 100%;
-      background: var(--green);
-      border-radius: 99px;
-    }
+  .cal-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cal-week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
 
-    /* ── Daily grid (heatmap) ── */
-    .grid-wrap {
-      background: var(--paper);
-      border-radius: 14px;
-      padding: 14px 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    table.heatmap {
-      border-collapse: collapse;
-      min-width: 100%;
-      font-size: 0.75rem;
-    }
-    table.heatmap th, table.heatmap td {
-      text-align: center;
-      padding: 4px 3px;
-    }
-    table.heatmap th {
-      color: var(--ink-muted);
-      font-weight: normal;
-      white-space: nowrap;
-      padding-bottom: 8px;
-    }
-    td.date-cell {
-      text-align: left;
-      color: var(--ink-muted);
-      white-space: nowrap;
-      padding-right: 10px;
-      font-size: 0.72rem;
-    }
-    tr.today-row td.date-cell {
-      font-weight: bold;
-      color: var(--green);
-    }
-    .dot {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border-radius: 4px;
-    }
-    .dot-off { background: var(--green-mid); }
-    .dot-on  { background: var(--green); }
-    .dot-na  { background: transparent; border: 1px dashed var(--ink-faint); }
+  .cal-cell {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .cal-cell:hover {
+    transform: scale(1.1);
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
 
-    /* ── Bottom nav ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + var(--safe-b));
-      padding-bottom: var(--safe-b);
-      background: var(--paper);
-      border-top: 1px solid var(--ink-faint);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 100;
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      text-decoration: none;
-      color: var(--ink-muted);
-      font-size: 0.6rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      flex: 1;
-      padding: 10px 0;
-      transition: color 0.15s;
-    }
-    .nav-item .ni { font-size: 1.3rem; line-height: 1; }
-    .nav-item.active { color: var(--green); }
-    .nav-logout { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .nav-logout form { display: contents; }
-    .nav-logout button {
-      background: none; border: none; cursor: pointer;
-      font-family: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      color: var(--ink-muted); font-size: 0.6rem;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 10px 0; width: 100%;
-    }
-    .nav-logout button .ni { font-size: 1.3rem; line-height: 1; }
-  </style>
-</head>
-<body>
-  <div class="shell">
+  /* Level intensity styles */
+  .cal-cell.lvl-out {
+    opacity: 0.15;
+    pointer-events: none;
+    background: transparent;
+    color: var(--ink-faint);
+  }
+  .cal-cell.lvl-0 {
+    background: var(--cream);
+    color: var(--ink-muted);
+    border-color: rgba(0,0,0,0.04);
+  }
+  .cal-cell.lvl-1 {
+    background: #d4e8da;
+    color: #274732;
+  }
+  .cal-cell.lvl-2 {
+    background: #90c29a;
+    color: #173b22;
+    font-weight: bold;
+  }
+  .cal-cell.lvl-3 {
+    background: var(--green);
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(61, 90, 71, 0.25);
+  }
 
-    <div class="page-header">
-      <h1>Stats</h1>
-      <div class="range">{{ start_date|date:"M j" }} – {{ today|date:"M j, Y" }}</div>
+  .cal-cell.is-today {
+    outline: 2.5px solid var(--ink);
+    outline-offset: -1px;
+  }
+
+  .cal-cell .day-num {
+    line-height: 1;
+  }
+  .cal-cell .cal-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    margin-top: 3px;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  /* ══════════════════════════════════════
+     7-DAY STRIP (7-DAY VIEW)
+  ══════════════════════════════════════ */
+  .strip-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    background: var(--paper);
+    border-radius: 18px;
+    padding: 16px 10px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+    margin-bottom: 16px;
+  }
+  .strip-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 2px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: transform 0.15s, background 0.15s;
+    background: var(--cream);
+    color: var(--ink);
+    border: 1px solid transparent;
+  }
+  .strip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .strip-card.is-today {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px var(--green);
+  }
+  .strip-card .wday {
+    font-size: 0.68rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .strip-card .dnum {
+    font-size: 1.05rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .strip-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: bold;
+  }
+  .strip-badge.lvl-3 {
+    background: var(--green);
+    color: white;
+  }
+  .strip-badge.lvl-2, .strip-badge.lvl-1 {
+    background: #90c29a;
+    color: #173b22;
+  }
+  .strip-badge.lvl-0 {
+    background: var(--green-mid);
+    color: var(--ink-muted);
+  }
+  .strip-badge.lvl-na {
+    background: transparent;
+    border: 1px dashed var(--ink-faint);
+  }
+
+  /* ── Legend & Hint ── */
+  .cal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--cream);
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+  }
+  .cal-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .leg-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  /* ══════════════════════════════════════
+     PER HABIT CARDS & MINI STRIP
+  ══════════════════════════════════════ */
+  .habit-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .habit-card {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+  .habit-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .habit-card-top .hname {
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .habit-card-top .hmeta {
+    font-size: 0.88rem;
+    font-weight: bold;
+    color: var(--green);
+  }
+
+  .hbar-track {
+    height: 7px;
+    background: var(--green-mid);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .hbar-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .habit-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--cream);
+    padding-top: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .streak-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: #b75900;
+    background: #fdf2e2;
+    border: 1px solid #f9d8a6;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+
+  /* 7-day mini dots on habit card */
+  .mini-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mini-dot-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .mini-dot-label {
+    font-size: 0.6rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+  .mini-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+  .mini-dot.on {
+    background: var(--green);
+  }
+  .mini-dot.off {
+    background: var(--green-mid);
+  }
+  .mini-dot.na {
+    background: transparent;
+    border: 1px dashed var(--ink-faint);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Stats</h1>
+    <div class="range">{{ start_date|date:'M j' }} – {{ today|date:'M j, Y' }}</div>
+  </div>
+
+  <!-- Period toggle -->
+  <div class="period-toggle">
+    <a href="?period=week" class="{% if period == 'week' %}active{% endif %}">Last 7 Days</a>
+    <a href="?period=month" class="{% if period == 'month' %}active{% endif %}">Last 30 Days</a>
+  </div>
+
+  <!-- Summary tiles -->
+  <div class="summary-row">
+    <div class="summary-tile">
+      <div class="num">{{ overall_percent }}%</div>
+      <div class="lbl">Overall</div>
     </div>
-
-    <!-- Period toggle -->
-    <div class="period-toggle">
-      <a href="?period=week"  class="{% if period == 'week'  %}active{% endif %}">Last 7 Days</a>
-      <a href="?period=month" class="{% if period == 'month' %}active{% endif %}">Last 30 Days</a>
+    <div class="summary-tile">
+      <div class="num">{{ total_completed }}</div>
+      <div class="lbl">Done</div>
     </div>
-
-    <!-- Summary tiles -->
-    <div class="summary-row">
-      <div class="summary-tile">
-        <div class="num">{{ overall_percent }}%</div>
-        <div class="lbl">Overall</div>
-      </div>
-      <div class="summary-tile">
-        <div class="num">{{ total_completed }}</div>
-        <div class="lbl">Done</div>
-      </div>
-      <div class="summary-tile">
-        <div class="num">{{ total_missed }}</div>
-        <div class="lbl">Missed</div>
-      </div>
+    <div class="summary-tile">
+      <div class="num">{{ total_missed }}</div>
+      <div class="lbl">Missed</div>
     </div>
+  </div>
 
-    {% if habit_stats %}
-      <!-- Per-habit -->
-      <div class="section-heading">Per Habit</div>
-      <div class="habit-cards">
-        {% for stat in habit_stats %}
-        <div class="habit-card">
-          <div class="habit-card-top">
-            <span class="hname">{% if stat.habit.icon %}{{ stat.habit.icon }} {% endif %}{{ stat.habit.name }}</span>
-            <span class="hmeta">
-              {% if stat.percent is not None %}{{ stat.percent }}%{% else %}no data{% endif %}
-            </span>
+  <!-- CALENDAR / CONSISTENCY VIEW -->
+  {% if period == 'month' %}
+    <div class="section-heading">Monthly Activity Calendar</div>
+    <div class="calendar-card">
+      <div class="cal-weekdays">
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
+      </div>
+      <div class="cal-grid">
+        {% for week in calendar_weeks %}
+          <div class="cal-week-row">
+            {% for cell in week %}
+              {% if cell.is_in_range %}
+                <a href="{% url 'routines:day' cell.date|date:'Y-m-d' %}"
+                   class="cal-cell lvl-{{ cell.level }} {% if cell.is_today %}is-today{% endif %}"
+                   title="{{ cell.date|date:'M j, Y' }}{% if cell.is_today %} (Today){% endif %}: {{ cell.done_count }}/{{ cell.active_count }} habits done ({{ cell.percent }}%)">
+                  <span class="day-num">{{ cell.day_num }}</span>
+                  {% if cell.level == 3 %}
+                    <span class="cal-dot"></span>
+                  {% endif %}
+                </a>
+              {% else %}
+                <div class="cal-cell lvl-out">
+                  <span class="day-num">{{ cell.day_num }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
           </div>
-          <div class="hbar-track">
-            <div class="hbar-fill" style="width: {{ stat.percent|default:0 }}%;"></div>
-          </div>
-          {% if stat.percent is not None %}
-          <div style="font-size:0.72rem; color: var(--ink-muted); margin-top: 6px;">
-            {{ stat.completed }} done &middot; {{ stat.missed }} missed
-          </div>
-          {% endif %}
-        </div>
         {% endfor %}
       </div>
 
-      <!-- Daily grid -->
-      <div class="section-heading">Daily Grid</div>
-      <div class="grid-wrap">
-        <table class="heatmap">
-          <thead>
-            <tr>
-              <th></th>
-              {% for h in habits %}
-                <th title="{{ h.name }}">{{ h.icon|default:h.name|slice:":3" }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in grid %}
-            <tr class="{% if row.is_today %}today-row{% endif %}">
-              <td class="date-cell">{{ row.date|date:"M j" }}</td>
-              {% for cell in row.cells %}
-                <td><span class="dot dot-{{ cell }}"></span></td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="cal-footer">
+        <span>Tap any date to view day</span>
+        <div class="cal-legend">
+          <div class="leg-item"><span class="leg-box" style="background:var(--cream); border:1px solid rgba(0,0,0,0.06);"></span> 0%</div>
+          <div class="leg-item"><span class="leg-box" style="background:#90c29a;"></span> 50%+</div>
+          <div class="leg-item"><span class="leg-box" style="background:var(--green);"></span> 100%</div>
+        </div>
       </div>
-
-    {% else %}
-      <div style="text-align:center; color: var(--ink-muted); padding: 40px 0; font-style: italic;">
-        No habits to show yet.
-      </div>
-    {% endif %}
-
-  </div><!-- /shell -->
-
-  <nav class="bottom-nav">
-    <a href="{% url 'routines:today' %}" class="nav-item">
-      <span class="ni">☀️</span>Today
-    </a>
-    <a href="{% url 'routines:stats' %}" class="nav-item active">
-      <span class="ni">📊</span>Stats
-    </a>
-    <a href="{% url 'routines:manage' %}" class="nav-item">
-      <span class="ni">⚙️</span>Manage
-    </a>
-    <div class="nav-logout">
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit"><span class="ni">🚪</span>Logout</button>
-      </form>
     </div>
-  </nav>
-</body>
-</html>
+
+  {% else %}
+    <!-- 7-Day Horizontal Strip View -->
+    <div class="section-heading">Past 7 Days</div>
+    <div class="strip-grid">
+      {% for d in days_7 %}
+        <a href="{% url 'routines:day' d.date|date:'Y-m-d' %}"
+           class="strip-card {% if d.is_today %}is-today{% endif %}"
+           title="{{ d.date|date:'l, M j' }}: {{ d.done_count }}/{{ d.active_count }} done ({{ d.percent }}%)">
+          <span class="wday">{{ d.weekday_short }}</span>
+          <span class="dnum">{{ d.day_num }}</span>
+          <span class="strip-badge lvl-{{ d.level }}">
+            {% if d.level == 3 %}✓{% elif d.level == 'na' %}-{% else %}{{ d.percent }}%{% endif %}
+          </span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- HABIT PERFORMANCE & STREAKS -->
+  {% if habit_stats %}
+    <div class="section-heading">Habit Streaks & Performance</div>
+    <div class="habit-cards">
+      {% for stat in habit_stats %}
+        <div class="habit-card">
+          <div class="habit-card-top">
+            <span class="hname">
+              {% if stat.habit.icon %}{{ stat.habit.icon }}{% endif %}
+              {{ stat.habit.name }}
+            </span>
+            <span class="hmeta">
+              {% if stat.percent is not None %}
+                {{ stat.percent }}%
+              {% else %}
+                archived
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="hbar-track">
+            <div class="hbar-fill" style="width: {{ stat.percent|default:0 }}%;"></div>
+          </div>
+
+          <div class="habit-card-bottom">
+            <div class="streak-pill" title="Current consecutive streak / All-time record">
+              🔥 {{ stat.current_streak }}d streak &middot; 🏆 {{ stat.best_streak }}d best
+            </div>
+
+            <!-- Mini 7-day strip -->
+            <div class="mini-dots" title="Last 7 days performance for {{ stat.habit.name }}">
+              {% for dot in stat.recent_dots %}
+                <div class="mini-dot-item" title="{{ dot.date|date:'M j' }}: {% if dot.status == 'on' %}Done{% elif dot.status == 'off' %}Missed{% else %}Not Active{% endif %}">
+                  <span class="mini-dot {{ dot.status }}"></span>
+                  <span class="mini-dot-label">{{ dot.day }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center; color: var(--ink-muted); padding: 40px 0; font-style: italic;">No habits to show yet.</div>
+  {% endif %}
+{% endblock %}

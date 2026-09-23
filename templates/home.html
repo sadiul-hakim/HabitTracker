@@ -1,9 +1,11 @@
+{% load pwa %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Routine</title>
+    {% progressive_web_app_meta %}
     <style>
       :root {
         --green: #3d5a47;
@@ -134,7 +136,7 @@
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <p class="login-note">
-          Signed in &middot; <button type="submit" style="background:none; border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; color:var(--ink-muted); text-decoration:underline; padding:0;">Log out</button>
+          Signed in &middot; <a href="{% url 'admin:index' %}">Admin Dashboard</a> &middot; <button type="submit" style="background:none; border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; color:var(--ink-muted); text-decoration:underline; padding:0;">Log out</button>
         </p>
       </form>
     </div>
